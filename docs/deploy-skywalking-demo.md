@@ -120,7 +120,7 @@ span -> RestTemplate client span -> `/work` server span):
 for i in $(seq 1 80); do curl -s -o /dev/null http://<host>:18090/hello; done
 ```
 
-1. **UI**: `http://<host>:13800` -> the `demo-service` appears under Services,
+1. **UI**: `http://<host>:13800` -> the `skywalking-mirror-demo` service appears under Services,
    with a topology node and traces (`GET:/hello`, `GET:/work`).
 
 2. **OAP via GraphQL** (run inside the compose network):
@@ -131,7 +131,7 @@ for i in $(seq 1 80); do curl -s -o /dev/null http://<host>:18090/hello; done
      -d '{"query":"query{getAllServices(duration:{start:\"2026-01-01 0000\",end:\"2030-01-01 0000\",step:MINUTE}){id name}}"}'
    ```
 
-   Expect `demo-service` in the result.
+   Expect `skywalking-mirror-demo` in the result.
 
 3. **Mirror metrics** confirm both legs:
 
