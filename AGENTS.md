@@ -4,7 +4,7 @@
 
 本仓提供一个无状态 SkyWalking v3 gRPC mirror。SkyWalking Agent只连接本服务；客户 OAP是唯一权威后端，阿里云 ARMS只接收有界、best-effort的数据副本。
 
-该服务不参与父项目的 Gateway、Raw Telemetry Store、Pipeline或 SLS路由，也不把 SkyWalking数据转换为 OTLP。
+服务只接收并转发SkyWalking v3 gRPC，不持久化telemetry，也不把payload转换为其他协议或数据模型。
 
 ## 不可破坏的语义
 
@@ -141,10 +141,8 @@ go vet ./...
 - README面向使用者，技术方案记录架构理由和故障语义；仓库维护和代理执行规则只写在本文件，不在README重复。
 - 删除或重命名文档时，必须清理全部交叉引用。
 
-## Git与submodule
+## Git
 
-- 不修改仓库现有author/committer身份；两个remote使用相同commit历史和提交信息。
+- 不修改仓库现有author/committer身份；所有已配置remote使用相同commit历史和提交信息。
 - 不配置隐式fan-out push；是否推送某个remote必须是显式操作。
-- 子仓commit必须先在目标remote可获取，父仓才能更新gitlink。
-- 父仓和构建流程固定gitlink精确SHA，不使用 `git submodule update --remote`。
 - 不改写已经发布的 `main` 历史，除非用户明确授权force-push及其影响范围。

@@ -11,7 +11,7 @@ The design is based on two invariants:
 1. The Agent observes only the OAP response, metadata, status and `Commands`.
 2. ARMS work has bounded concurrency and memory and never applies backpressure to the OAP path.
 
-The service is a stateless protocol relay. It does not participate in the parent repository's raw store, pipeline, SLS routing or Gateway data model.
+The service is a standalone, stateless protocol relay. It does not persist telemetry or transform payloads into another protocol or data model.
 
 ## 2. Scope
 
@@ -185,6 +185,6 @@ Protocol upgrades are explicit:
 2. review generated service descriptors and RPC cardinality changes;
 3. update registrations and the 20/9 routing policy intentionally;
 4. run descriptor, transport, failure-isolation, race and deployment tests;
-5. publish the child repository commit before updating the parent gitlink.
+5. publish the protocol upgrade only after the required checks pass.
 
 Real ARMS support for non-trace methods depends on the selected regional endpoint. Smoke results describe observed support but do not change the rule that ARMS failure is isolated from OAP.
