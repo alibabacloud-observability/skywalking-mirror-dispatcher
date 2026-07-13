@@ -3,14 +3,13 @@ SHELL := /bin/sh
 GO ?= go
 BINARY ?= bin/skywalking-mirror
 IMAGE ?= skywalking-mirror-dispatcher:local
-KUBECONFORM_VERSION ?= v0.7.0
 
 GOAPI_MODULE := skywalking.apache.org/repo/goapi
 GOAPI_VERSION := v0.0.0-20260521015734-5c05525a3cce
 
 .DEFAULT_GOAL := help
 
-.PHONY: help fmt fmt-check verify-goapi test test-race vet check build run docker-build kube-validate
+.PHONY: help fmt fmt-check verify-goapi test test-race vet check build run docker-build
 
 help:
 	@printf '%s\n' \
@@ -23,8 +22,7 @@ help:
 		'check            Run fmt-check, goapi verification, tests, race and vet' \
 		'build            Build the binary into $(BINARY)' \
 		'run              Run the service with the current environment' \
-		'docker-build     Build container image $(IMAGE)' \
-		'kube-validate    Strictly validate the Kubernetes manifest'
+		'docker-build     Build container image $(IMAGE)'
 
 fmt:
 	$(GO) fmt ./cmd/... ./internal/...
@@ -64,7 +62,3 @@ run:
 
 docker-build:
 	docker build -t "$(IMAGE)" .
-
-kube-validate:
-	$(GO) run github.com/yannh/kubeconform/cmd/kubeconform@$(KUBECONFORM_VERSION) \
-		-strict -summary deploy/kubernetes.yaml

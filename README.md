@@ -170,7 +170,6 @@ Additional targets:
 ```bash
 make run                                      # uses the current environment
 make docker-build IMAGE=skywalking-mirror:dev
-make kube-validate
 ```
 
 The tests use official generated clients and typed fake servers for representative unary, client-streaming and OAP-only calls. They also cover OAP metadata/status authority, cancellation, saturation, ARMS blocking/failure, queue overflow and bounded worker exit.

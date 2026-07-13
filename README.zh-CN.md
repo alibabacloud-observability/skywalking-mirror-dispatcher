@@ -170,7 +170,6 @@ make build
 ```bash
 make run                                      # 使用当前环境变量
 make docker-build IMAGE=skywalking-mirror:dev
-make kube-validate
 ```
 
 测试使用官方 generated client 和 typed fake server，覆盖代表性的 unary、client-streaming 和 OAP-only 调用，还覆盖 OAP metadata/status 权威语义、取消、过载、ARMS 阻塞/失败、队列溢出和 worker 有界退出。

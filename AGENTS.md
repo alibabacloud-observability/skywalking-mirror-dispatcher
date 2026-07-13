@@ -110,7 +110,7 @@ internal/telemetry/     Prometheus指标
 internal/upstream/      OAP/ARMS连接与TLS
 deploy/                 Kubernetes清单
 docs/                   中英文技术方案
-Makefile                本地构建、测试、镜像和清单校验入口
+Makefile                本地构建、测试和镜像入口
 ```
 
 共享转发语义放在typed helper中，每个generated service adapter只做类型绑定。不要为每个方法复制一套转发状态机。
@@ -140,7 +140,7 @@ make check
 - representative unary、client-streaming、OAP-only transport测试通过；
 - ARMS阻塞、queue满、semaphore满、`UNIMPLEMENTED`、鉴权失败和不可达不改变OAP结果；
 - `make docker-build`生成的镜像仍为非root；
-- `make kube-validate`通过，Kubernetes清单仍不通过Service暴露Admin端口。
+- Kubernetes清单仍不通过Service暴露Admin端口。
 
 不要新增逐方法重复E2E、固定P99/吞吐门禁或没有真实生产依据的复杂watchdog。
 
