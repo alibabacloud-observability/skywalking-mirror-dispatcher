@@ -173,15 +173,15 @@ blocked (e.g. in China), override without editing tracked files.
 
 - **ARMS `Unavailable` for every method, OAP is `OK`.** The ARMS transport mode
   does not match the endpoint. The mirror uses **plaintext** gRPC to ARMS by
-  default (`ARMS_TLS=false`); Alibaba Cloud's SkyWalking v3 endpoint is plaintext
-  on port `8000` (e.g. `tracing-analysis-dc-<region>.aliyuncs.com:8000`). Set
+  default, so `ARMS_TLS` should be omitted; Alibaba Cloud's SkyWalking v3 endpoint
+  is plaintext on port `8000` (e.g. `tracing-analysis-dc-<region>.aliyuncs.com:8000`). Set
   `ARMS_TLS=true` only for a TLS-enabled endpoint (and use its TLS port).
   A TLS/plaintext mismatch in either direction yields `Unavailable`.
   Probe the endpoint:
 
   ```bash
   openssl s_client -connect <arms-host>:<port> -servername <arms-host> </dev/null
-  # "unknown protocol" / "no peer certificate" -> plaintext endpoint  -> ARMS_TLS=false
+  # "unknown protocol" / "no peer certificate" -> plaintext endpoint  -> omit ARMS_TLS
   # a real certificate is presented                -> TLS endpoint     -> ARMS_TLS=true
   ```
 

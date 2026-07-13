@@ -82,7 +82,7 @@ All settings are environment variables. No configuration file is loaded.
 | `DRAIN_TIMEOUT` | no | `30s` | Process graceful shutdown budget |
 | `LOG_STDOUT` | no | `false` | Also copy structured file logs to stdout |
 
-All three gRPC legs use plaintext by default. Listener TLS is enabled by the certificate/key pair, OAP TLS by `OAP_TLS=true`, and ARMS TLS by `ARMS_TLS=true`. Leave `ARMS_TLS=false` for plaintext ARMS ports such as `8000` or `8090`; use `true` only with a TLS endpoint such as port `443`. The token is never included in configuration summaries, logs or metric labels.
+All three gRPC legs use plaintext by default. Listener TLS is enabled by the certificate/key pair, OAP TLS by `OAP_TLS=true`, and ARMS TLS by `ARMS_TLS=true`. Omit `ARMS_TLS` for plaintext ARMS ports such as `8000` or `8090`; set it to `true` only with a TLS endpoint such as port `443`. The token is never included in configuration summaries, logs or metric labels.
 
 Alibaba Cloud ARMS SkyWalking access guide: [Report Java application data with SkyWalking agent](https://www.alibabacloud.com/help/en/arms/tracing-analysis/use-skywalking-to-report-java-application-data).
 
