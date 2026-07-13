@@ -14,6 +14,7 @@ data:
   ARMS_STREAM_QUEUE_SIZE: "128"
   ARMS_FINISH_TIMEOUT: "5s"
   DRAIN_TIMEOUT: "30s"
+  LOG_STDOUT: "true"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -82,7 +83,7 @@ spec:
               memory: 512Mi
           securityContext:
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
+            readOnlyRootFilesystem: false
             capabilities:
               drop:
                 - ALL

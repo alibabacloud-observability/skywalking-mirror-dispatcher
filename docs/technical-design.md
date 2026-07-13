@@ -47,11 +47,12 @@ It intentionally excludes:
                                                      best-effort copy
 ```
 
-The binary has four main layers:
+The binary has five main layers:
 
 - `internal/policy`: the fixed 29-method routing policy;
 - `internal/proxy`: generated service adapters and shared typed relay helpers;
 - `internal/upstream`: static OAP/ARMS gRPC connections and transport credentials;
+- `internal/logging`: zap construction and lumberjack rotation;
 - `internal/app`: gRPC/Admin listeners, metrics and process lifecycle.
 
 There is no generic unknown-service proxy. Every accepted method is registered through the official generated `Register*Server` function and calls the matching generated client method.
@@ -162,6 +163,10 @@ The low-cardinality metric set is:
 
 Method labels can only come from the fixed registry. Endpoints, tokens and user-supplied values are never labels.
 
+Process logs use zap's typed fields and a production JSON encoder. The primary output is always `skywalking-mirror.log` beside the executable. `LOG_STDOUT=true` adds stdout as a copy target; its default is `false`. Lumberjack rotates the file at 100 MiB, retains five backups for at most 30 days and compresses rotated files. Only lifecycle and rate-limited failure events are logged; successful RPCs do not produce per-call logs. Logging initialization fails closed when the executable directory is not writable, so operators do not unknowingly lose the required file output.
+
+The file sink is bounded local operational storage, with no delivery or replay semantics. Container deployments can enable the optional stdout copy for aggregation; the supplied Kubernetes manifest sets `LOG_STDOUT=true`.
+
 ## 11. Failure behavior
 
 | Failure | Agent-visible result | Copy behavior |
@@ -177,7 +182,9 @@ The accepted trade-off is incomplete ARMS copies during overload or failure. If 
 
 ## 12. Deployment and upgrade
 
-The supplied image is a pinned multi-stage build with a statically linked binary and a non-root distroless runtime. The default Kubernetes Service is `ClusterIP` and exposes only the Agent-facing gRPC port; the Admin port remains Pod-local for probes and scraping.
+The supplied image is a pinned multi-stage build with a statically linked binary and a non-root distroless runtime. The binary lives at `/app/skywalking-mirror`, and `/app` is owned by uid/gid `65532` so the adjacent log file can be created and rotated. The default Kubernetes Service is `ClusterIP` and exposes only the Agent-facing gRPC port; the Admin port remains Pod-local for probes and scraping.
+
+Writing beside the executable means the supplied Kubernetes root filesystem cannot be read-only. This is a manifest-specific constraint, not a general Docker limitation: a normal `docker run` has a writable container layer. The manifest keeps non-root execution, disabled privilege escalation, dropped capabilities and the runtime-default seccomp profile. The rotating file is ephemeral and disappears with the Pod; the manifest also enables stdout for durable collection by the cluster logging system.
 
 Protocol upgrades are explicit:
 

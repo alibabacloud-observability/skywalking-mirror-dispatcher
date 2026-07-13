@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net"
 	"net/http"
 	"sync"
@@ -18,12 +17,13 @@ import (
 	"github.com/alibabacloud-observability/skywalking-mirror-dispatcher/internal/upstream"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
 type App struct {
 	cfg    config.Config
-	logger *slog.Logger
+	logger *zap.Logger
 
 	connections *upstream.Connections
 	proxy       *proxy.Proxy
@@ -36,9 +36,9 @@ type App struct {
 	serveErr    chan error
 }
 
-func New(cfg config.Config, logger *slog.Logger) (*App, error) {
+func New(cfg config.Config, logger *zap.Logger) (*App, error) {
 	if logger == nil {
-		logger = slog.Default()
+		logger = zap.NewNop()
 	}
 	connections, err := upstream.Dial(cfg)
 	if err != nil {
@@ -94,7 +94,7 @@ func (a *App) Start() error {
 	a.grpcLis = grpcLis
 	a.adminLis = adminLis
 	a.ready.Store(true)
-	a.logger.Info("servers started", "grpc_addr", grpcLis.Addr().String(), "admin_addr", adminLis.Addr().String())
+	a.logger.Info("servers started", zap.String("grpc_addr", grpcLis.Addr().String()), zap.String("admin_addr", adminLis.Addr().String()))
 	go func() {
 		if err := a.grpcServer.Serve(grpcLis); err != nil {
 			a.serveErr <- fmt.Errorf("gRPC server: %w", err)

@@ -9,11 +9,13 @@ RUN go mod download
 COPY . .
 ARG TARGETOS
 ARG TARGETARCH
-RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} \
-    go build -trimpath -ldflags='-s -w -buildid=' -o /out/skywalking-mirror ./cmd/skywalking-mirror
+RUN mkdir -p /out/app && \
+    CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} \
+    go build -trimpath -ldflags='-s -w -buildid=' -o /out/app/skywalking-mirror ./cmd/skywalking-mirror
 
 FROM gcr.io/distroless/static-debian12:nonroot@sha256:b7bb25d9f7c31d2bdd1982feb4dafcaf137703c7075dbe2febb41c24212b946f
-COPY --from=build --chown=65532:65532 /out/skywalking-mirror /skywalking-mirror
+COPY --from=build --chown=65532:65532 /out/app /app
+WORKDIR /app
 USER 65532:65532
 EXPOSE 11800 8080
-ENTRYPOINT ["/skywalking-mirror"]
+ENTRYPOINT ["/app/skywalking-mirror"]

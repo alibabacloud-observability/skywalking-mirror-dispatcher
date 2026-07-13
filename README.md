@@ -79,6 +79,7 @@ All settings are environment variables. No configuration file is loaded.
 | `ARMS_STREAM_QUEUE_SIZE` | no | `128` | Per mirrored client-streaming RPC queue |
 | `ARMS_FINISH_TIMEOUT` | no | `5s` | Maximum ARMS unary lifetime or stream finish time |
 | `DRAIN_TIMEOUT` | no | `30s` | Process graceful shutdown budget |
+| `LOG_STDOUT` | no | `false` | Also copy structured file logs to stdout |
 
 ARMS always uses TLS. The token is never included in configuration summaries, logs or metric labels.
 
@@ -109,6 +110,12 @@ Admin endpoints:
 
 Readiness deliberately does not follow OAP or ARMS channel state.
 
+## Logs
+
+The service uses zap for structured JSON logging. The primary output is always `skywalking-mirror.log` in the running binary's directory. Set `LOG_STDOUT=true` to copy the same structured events to stdout; stdout is disabled by default. The file is rotated by lumberjack at 100 MiB; five backups are retained for up to 30 days and compressed. The process fails at startup if the binary directory is not writable.
+
+The file is local operational storage, not durable telemetry storage. Container deployments can enable stdout for their normal log collector; the supplied Kubernetes manifest does so explicitly. In the supplied image the file path is `/app/skywalking-mirror.log`; the Kubernetes container filesystem is writable for this reason, and the file is discarded with the Pod.
+
 ## Docker
 
 ```bash
@@ -117,11 +124,12 @@ docker run --rm \
   -e OAP_ENDPOINT=customer-oap.example:11800 \
   -e ARMS_ENDPOINT='<endpoint-from-arms-console>' \
   -e ARMS_AUTHENTICATION='<token-from-arms-console>' \
+  -e LOG_STDOUT=true \
   -p 11800:11800 -p 127.0.0.1:8080:8080 \
   skywalking-mirror-dispatcher:local
 ```
 
-The final image is distroless, contains only the statically linked service and CA bundle, and runs as uid/gid `65532`.
+The final image is distroless, contains only the statically linked service and CA bundle, and runs as uid/gid `65532`. The non-root user owns `/app`, so the service can create and rotate `/app/skywalking-mirror.log` beside the binary.
 
 ## Kubernetes
 
@@ -133,7 +141,7 @@ kubectl create secret generic skywalking-mirror-secrets \
 kubectl apply -f deploy/kubernetes.yaml
 ```
 
-The gRPC Service is `ClusterIP`; the Admin port is Pod-only. To roll back, point Agents back to the original OAP endpoint and remove the Deployment. The service is stateless and has no data migration or replay step.
+The gRPC Service is `ClusterIP`; the Admin port is Pod-only. The container root filesystem remains writable solely for the binary-adjacent rotating log file; all other container hardening settings remain enabled. To roll back, point Agents back to the original OAP endpoint and remove the Deployment. The service is stateless and has no data migration or replay step.
 
 ## Metrics
 

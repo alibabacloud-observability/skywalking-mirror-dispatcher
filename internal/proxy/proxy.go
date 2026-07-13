@@ -3,13 +3,13 @@ package proxy
 
 import (
 	"context"
-	"log/slog"
 	"sync"
 	"time"
 
 	"github.com/alibabacloud-observability/skywalking-mirror-dispatcher/internal/config"
 	"github.com/alibabacloud-observability/skywalking-mirror-dispatcher/internal/policy"
 	"github.com/alibabacloud-observability/skywalking-mirror-dispatcher/internal/telemetry"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -20,7 +20,7 @@ type Proxy struct {
 	oap     targetClients
 	arms    targetClients
 	metrics *telemetry.Metrics
-	logger  *slog.Logger
+	logger  *zap.Logger
 
 	rootCtx    context.Context
 	cancelRoot context.CancelFunc
@@ -33,10 +33,10 @@ type Proxy struct {
 	armsWG     sync.WaitGroup
 }
 
-func New(cfg config.Config, oap, arms grpc.ClientConnInterface, metrics *telemetry.Metrics, logger *slog.Logger) *Proxy {
+func New(cfg config.Config, oap, arms grpc.ClientConnInterface, metrics *telemetry.Metrics, logger *zap.Logger) *Proxy {
 	rootCtx, cancel := context.WithCancel(context.Background())
 	if logger == nil {
-		logger = slog.Default()
+		logger = zap.NewNop()
 	}
 	return &Proxy{
 		cfg:        cfg,
@@ -56,7 +56,7 @@ func (p *Proxy) UnaryInterceptor(ctx context.Context, req any, info *grpc.UnaryS
 		return handler(ctx, req)
 	}
 	if !p.enterIncoming() {
-		p.logger.Warn("incoming RPC rejected", "method", info.FullMethod, "reason", "draining_or_saturated")
+		p.logger.Warn("incoming RPC rejected", zap.String("method", info.FullMethod), zap.String("reason", "draining_or_saturated"))
 		return nil, status.Error(codes.ResourceExhausted, "skywalking mirror is saturated or draining")
 	}
 	defer p.leaveIncoming()
@@ -68,7 +68,7 @@ func (p *Proxy) StreamInterceptor(srv any, stream grpc.ServerStream, info *grpc.
 		return handler(srv, stream)
 	}
 	if !p.enterIncoming() {
-		p.logger.Warn("incoming RPC rejected", "method", info.FullMethod, "reason", "draining_or_saturated")
+		p.logger.Warn("incoming RPC rejected", zap.String("method", info.FullMethod), zap.String("reason", "draining_or_saturated"))
 		return status.Error(codes.ResourceExhausted, "skywalking mirror is saturated or draining")
 	}
 	defer p.leaveIncoming()
@@ -143,7 +143,7 @@ func (p *Proxy) tryStartARMS(method string) (func(), bool) {
 		}, true
 	default:
 		p.metrics.ObserveARMS(method, "skipped")
-		p.logger.Warn("ARMS mirror skipped", "method", method, "reason", "concurrency_limit")
+		p.logger.Warn("ARMS mirror skipped", zap.String("method", method), zap.String("reason", "concurrency_limit"))
 		return nil, false
 	}
 }

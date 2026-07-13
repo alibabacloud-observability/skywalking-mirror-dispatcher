@@ -103,6 +103,7 @@
 cmd/skywalking-mirror/  进程入口与signal处理
 internal/app/           listener、Admin server与生命周期
 internal/config/        环境变量解析、校验与脱敏摘要
+internal/logging/       zap结构化日志与lumberjack文件轮转
 internal/policy/        固定29方法路由表
 internal/proxy/         generated clients、service adapters与typed relay
 internal/telemetry/     Prometheus指标
@@ -113,6 +114,14 @@ Makefile                本地构建、测试、镜像和清单校验入口
 ```
 
 共享转发语义放在typed helper中，每个generated service adapter只做类型绑定。不要为每个方法复制一套转发状态机。
+
+## 日志约定
+
+- 业务代码统一使用 `*zap.Logger`和typed field，不得混用 `log`、`slog`或SugaredLogger。
+- 二进制同目录的 `skywalking-mirror.log`始终是主输出；仅当 `LOG_STDOUT=true`时额外写stdout，默认值为 `false`。
+- 文件使用lumberjack按100 MiB轮转，保留5个备份、最长30天并压缩；日志目录不可写时必须启动失败。
+- 文件日志不增加回放或投递承诺；容器部署可显式启用stdout供集中采集，Kubernetes示例必须启用。
+- Kubernetes因该约束允许可写root filesystem，但必须继续保持非root、禁止提权、drop capabilities和runtime-default seccomp。
 
 ## 开发与验证
 

@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -57,7 +58,7 @@ func startUnaryMirror[Request, Response any](p *Proxy, method string, request Re
 		_, err := call(ctx, request)
 		if err != nil {
 			p.metrics.ObserveARMS(method, "failed")
-			p.logger.Warn("ARMS mirror failed", "method", method, "code", status.Code(err).String())
+			p.logger.Warn("ARMS mirror failed", zap.String("method", method), zap.String("code", status.Code(err).String()))
 			return
 		}
 		p.metrics.ObserveARMS(method, "succeeded")
@@ -183,19 +184,19 @@ func startStreamMirror[
 		stream, err := open(ctx)
 		if err != nil {
 			side.terminal.finish("failed")
-			p.logger.Warn("ARMS mirror failed", "method", method, "code", status.Code(err).String())
+			p.logger.Warn("ARMS mirror failed", zap.String("method", method), zap.String("code", status.Code(err).String()))
 			return
 		}
 		for message := range side.queue {
 			if err := stream.Send(message); err != nil {
 				side.terminal.finish("failed")
-				p.logger.Warn("ARMS mirror failed", "method", method, "code", status.Code(err).String())
+				p.logger.Warn("ARMS mirror failed", zap.String("method", method), zap.String("code", status.Code(err).String()))
 				return
 			}
 		}
 		if _, err := stream.CloseAndRecv(); err != nil {
 			side.terminal.finish("failed")
-			p.logger.Warn("ARMS mirror failed", "method", method, "code", status.Code(err).String())
+			p.logger.Warn("ARMS mirror failed", zap.String("method", method), zap.String("code", status.Code(err).String()))
 			return
 		}
 		side.terminal.finish("succeeded")
