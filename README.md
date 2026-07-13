@@ -156,22 +156,3 @@ go vet ./...
 The tests use official generated clients and typed fake servers for representative unary, client-streaming and OAP-only calls. They also cover OAP metadata/status authority, cancellation, saturation, ARMS blocking/failure, queue overflow and bounded worker exit.
 
 Architecture and design details: [English](docs/technical-design.md) | [简体中文](docs/technical-design.zh-CN.md).
-
-## Repository and submodule workflow
-
-The standalone repository uses these explicit remotes:
-
-```bash
-git remote set-url origin git@github.com:alibabacloud-observability/skywalking-mirror-dispatcher.git
-git remote add gitlab git@gitlab.alibaba-inc.com:luhao.wh/skywalking-mirror-dispatcher.git
-```
-
-Do not configure fan-out push. Push the standalone commit to GitHub first, optionally push the same commit to `gitlab`, and only then update the parent repository gitlink.
-
-Consumers initialize the exact commit recorded by the parent repository:
-
-```bash
-git submodule update --init --recursive
-```
-
-Do not use `git submodule update --remote` in builds or releases.

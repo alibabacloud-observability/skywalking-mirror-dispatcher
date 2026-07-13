@@ -156,22 +156,3 @@ go vet ./...
 测试使用官方 generated client 和 typed fake server，覆盖代表性的 unary、client-streaming 和 OAP-only 调用，还覆盖 OAP metadata/status 权威语义、取消、过载、ARMS 阻塞/失败、队列溢出和 worker 有界退出。
 
 架构与设计细节：[English](docs/technical-design.md) | [简体中文](docs/technical-design.zh-CN.md)。
-
-## 仓库与 submodule 工作流
-
-独立仓库使用以下两个显式 remote：
-
-```bash
-git remote set-url origin git@github.com:alibabacloud-observability/skywalking-mirror-dispatcher.git
-git remote add gitlab git@gitlab.alibaba-inc.com:luhao.wh/skywalking-mirror-dispatcher.git
-```
-
-不要配置 fan-out push。先把独立仓库 commit 推送到 GitHub，再按需把同一 commit 推送到 `gitlab`，最后更新父仓 gitlink。
-
-使用者按父仓记录的精确 commit 初始化：
-
-```bash
-git submodule update --init --recursive
-```
-
-构建和发布时不要使用 `git submodule update --remote`。
