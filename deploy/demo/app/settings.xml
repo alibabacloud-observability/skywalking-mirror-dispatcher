@@ -1,0 +1,15 @@
+<!--
+  Maven mirror for faster/more-reliable builds. Aliyun's public mirror proxies
+  Maven Central and is reachable worldwide, so it is safe as a default. Remove
+  this file (and the COPY line in the Dockerfile) to build against Maven Central
+  directly, or point <url> at your own internal mirror.
+-->
+<settings>
+  <mirrors>
+    <mirror>
+      <id>central-mirror</id>
+      <mirrorOf>*</mirrorOf>
+      <url>https://maven.aliyun.com/repository/public</url>
+    </mirror>
+  </mirrors>
+</settings>

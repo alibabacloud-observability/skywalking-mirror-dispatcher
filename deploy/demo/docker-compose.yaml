@@ -1,0 +1,101 @@
+name: skywalking-stack
+
+# Self-contained SkyWalking demo stack. Location-agnostic: no host IP is baked in.
+#   banyandb -> storage (standalone)
+#   oap      -> SkyWalking OAP server (gRPC 11800 in-network, REST/GraphQL 12800)
+#   ui       -> SkyWalking Web UI (host 13800 -> 8080)
+#   mirror   -> skywalking-mirror relay (profile "mirror"): Agent -> mirror -> OAP + ARMS
+#   demo     -> Spring Boot app with the SkyWalking Java agent (profile "demo")
+#
+# Agents point to <host>:11800, served by the mirror when the "mirror" profile is on.
+# Without the mirror, uncomment oap 11800 to let agents talk to OAP directly.
+#
+# Quick start (unrestricted network):
+#   docker compose --profile mirror --profile demo up -d --build
+# Restricted network (China etc.): see docs/deploy-skywalking-demo.md for build-arg
+# and registry-mirror overrides. Nothing here assumes a specific machine.
+
+services:
+  banyandb:
+    image: apache/skywalking-banyandb:0.7.0
+    container_name: sw-banyandb
+    command: ["standalone"]
+    ports:
+      - "17912:17912"   # gRPC (OAP -> BanyanDB)
+      - "17913:17913"   # HTTP / dashboard
+    networks: [sw]
+    restart: unless-stopped
+
+  oap:
+    image: apache/skywalking-oap-server:10.1.0
+    container_name: sw-oap
+    depends_on: [banyandb]
+    environment:
+      SW_STORAGE: banyandb
+      SW_STORAGE_BANYANDB_TARGETS: banyandb:17912
+      SW_TELEMETRY: prometheus
+      SW_HEALTH_CHECKER: default
+      JAVA_OPTS: "-Xms2g -Xmx4g"
+    ports:
+      # gRPC 11800 stays in-network so the mirror can own host:11800.
+      # If you do NOT use the mirror, uncomment the next line to expose OAP directly.
+      # - "11800:11800"
+      - "12800:12800"   # REST / GraphQL (UI + healthcheck)
+    networks: [sw]
+    restart: unless-stopped
+
+  ui:
+    image: apache/skywalking-ui:10.1.0
+    container_name: sw-ui
+    depends_on: [oap]
+    environment:
+      SW_OAP_ADDRESS: http://oap:12800
+      SW_SERVER_PORT: "8080"
+    ports:
+      - "13800:8080"    # Web UI -> http://<host>:13800
+    networks: [sw]
+    restart: unless-stopped
+
+  # Enable with: docker compose --profile mirror up -d mirror
+  # Requires ./mirror.env with ARMS_ENDPOINT and ARMS_AUTHENTICATION filled in.
+  mirror:
+    build:
+      context: ../..          # repo root (skywalking-mirror)
+      dockerfile: Dockerfile
+    image: skywalking-mirror:local
+    container_name: sw-mirror
+    profiles: ["mirror"]
+    depends_on: [oap]
+    env_file:
+      - ./mirror.env
+    environment:
+      OAP_ENDPOINT: "oap:11800"
+      OAP_TLS: "false"
+      LISTEN_ADDR: ":11800"
+      ADMIN_ADDR: ":8080"
+    ports:
+      - "11800:11800"              # agent-facing gRPC -> <host>:11800
+      - "127.0.0.1:18081:8080"     # admin: /healthz /readyz /metrics (local only)
+    networks: [sw]
+    restart: unless-stopped
+
+  # SkyWalking-instrumented demo app (profile "demo"). Reports to the mirror,
+  # which relays to OAP (visible in UI) + ARMS.
+  demo:
+    build:
+      context: ./app
+    image: sw-demo:local
+    container_name: sw-demo
+    profiles: ["demo"]
+    environment:
+      SW_AGENT_NAME: "demo-service"
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: "mirror:11800"
+      SW_AGENT_INSTANCE_NAME: "demo-1"
+    ports:
+      - "18090:8080"               # http://<host>:18090/hello
+    networks: [sw]
+    restart: unless-stopped
+
+networks:
+  sw:
+    name: skywalking-stack
