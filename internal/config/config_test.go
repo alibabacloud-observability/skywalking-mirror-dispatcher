@@ -9,7 +9,7 @@ import (
 
 var environmentKeys = []string{
 	"LISTEN_ADDR", "ADMIN_ADDR", "OAP_ENDPOINT", "OAP_TLS", "OAP_CA_FILE",
-	"ARMS_ENDPOINT", "ARMS_AUTHENTICATION", "LISTENER_TLS_CERT_FILE", "LISTENER_TLS_KEY_FILE",
+	"ARMS_ENDPOINT", "ARMS_AUTHENTICATION", "ARMS_TLS", "LISTENER_TLS_CERT_FILE", "LISTENER_TLS_KEY_FILE",
 	"GRPC_MAX_MESSAGE_BYTES", "MAX_INFLIGHT_RPCS", "ARMS_MAX_CONCURRENT_RPCS",
 	"ARMS_STREAM_QUEUE_SIZE", "ARMS_FINISH_TIMEOUT", "DRAIN_TIMEOUT",
 }
@@ -37,9 +37,33 @@ func TestLoadDefaultsAndRedactedSummary(t *testing.T) {
 	if cfg.ARMSFinishTimeout != 5*time.Second || cfg.DrainTimeout != 30*time.Second {
 		t.Fatalf("unexpected duration defaults: %+v", cfg)
 	}
+	if cfg.OAPTLS || cfg.ARMSTLS || cfg.ListenerTLSCertFile != "" {
+		t.Fatalf("gRPC TLS must be disabled by default: %+v", cfg)
+	}
 	summary := fmt.Sprint(cfg.Summary())
 	if strings.Contains(summary, cfg.ARMSAuthentication) {
 		t.Fatalf("summary leaked ARMS authentication: %s", summary)
+	}
+}
+
+func TestLoadReadsOptionalARMSTLS(t *testing.T) {
+	cleanEnvironment(t)
+	t.Setenv("OAP_ENDPOINT", "oap:11800")
+	t.Setenv("ARMS_ENDPOINT", "arms:443")
+	t.Setenv("ARMS_AUTHENTICATION", "token")
+	t.Setenv("ARMS_TLS", "true")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cfg.ARMSTLS {
+		t.Fatal("ARMSTLS=false, want true")
+	}
+
+	t.Setenv("ARMS_TLS", "invalid")
+	if _, err := Load(); err == nil || !strings.Contains(err.Error(), "ARMS_TLS") {
+		t.Fatalf("invalid ARMS_TLS error = %v", err)
 	}
 }
 

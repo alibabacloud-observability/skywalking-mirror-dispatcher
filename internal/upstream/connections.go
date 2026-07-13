@@ -23,7 +23,10 @@ func Dial(cfg config.Config) (*Connections, error) {
 	if err != nil {
 		return nil, err
 	}
-	armsCreds := credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS12})
+	armsCreds := insecure.NewCredentials()
+	if cfg.ARMSTLS {
+		armsCreds = credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS12})
+	}
 	common := []grpc.DialOption{
 		grpc.WithDisableRetry(),
 		grpc.WithDefaultCallOptions(

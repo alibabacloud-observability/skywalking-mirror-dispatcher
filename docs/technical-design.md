@@ -125,11 +125,11 @@ The three legs deliberately have different trust rules:
 
 | Leg | Transport and metadata behavior |
 |---|---|
-| Agent → mirror | Plaintext or server TLS. The mirror does not authenticate the Agent, so the listener must remain in a trusted network. |
-| mirror → OAP | Plaintext or TLS with optional custom CA. Non-reserved incoming application metadata, including Agent `Authentication`, is copied directly. There is no separate OAP token setting. |
-| mirror → ARMS | TLS is mandatory. The only outgoing application metadata is `Authentication=<ARMS_AUTHENTICATION>`. Incoming authentication, authorization, cookies and other metadata are not copied. |
+| Agent → mirror | Plaintext by default; the certificate/key pair enables server TLS. The mirror does not authenticate the Agent, so the listener must remain in a trusted network. |
+| mirror → OAP | Plaintext by default; `OAP_TLS=true` enables TLS with an optional custom CA. Non-reserved incoming application metadata, including Agent `Authentication`, is copied directly. There is no separate OAP token setting. |
+| mirror → ARMS | Plaintext by default; `ARMS_TLS=true` enables TLS with system CAs. The only outgoing application metadata is `Authentication=<ARMS_AUTHENTICATION>`. Incoming authentication, authorization, cookies and other metadata are not copied. |
 
-The ARMS token is required at startup but is represented in configuration summaries only as a boolean “set” flag. Tokens and private keys are not logged or used as metric labels. Kubernetes injects endpoints through a ConfigMap and the ARMS token through a Secret reference.
+The endpoint port and transport mode must match: ARMS ports such as `8000` or `8090` remain plaintext, while a TLS endpoint such as `443` requires `ARMS_TLS=true`. The ARMS token is required at startup but is represented in configuration summaries only as a boolean “set” flag. Tokens and private keys are not logged or used as metric labels. Kubernetes injects endpoints and TLS switches through a ConfigMap and the ARMS token through a Secret reference.
 
 ## 9. Resource limits and lifecycle
 

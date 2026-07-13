@@ -73,6 +73,7 @@ All settings are environment variables. No configuration file is loaded.
 | `LISTENER_TLS_KEY_FILE` | no | — | Server TLS key; requires the certificate variable |
 | `OAP_TLS` | no | `false` | Use TLS for the OAP connection |
 | `OAP_CA_FILE` | no | — | Optional OAP CA bundle; requires `OAP_TLS=true` |
+| `ARMS_TLS` | no | `false` | Use TLS with system CAs for the ARMS connection |
 | `GRPC_MAX_MESSAGE_BYTES` | no | `52428800` | Inbound and outbound gRPC message limit |
 | `MAX_INFLIGHT_RPCS` | no | `1024` | Process-wide Agent RPC limit |
 | `ARMS_MAX_CONCURRENT_RPCS` | no | `64` | Process-wide mirrored RPC limit |
@@ -81,7 +82,7 @@ All settings are environment variables. No configuration file is loaded.
 | `DRAIN_TIMEOUT` | no | `30s` | Process graceful shutdown budget |
 | `LOG_STDOUT` | no | `false` | Also copy structured file logs to stdout |
 
-ARMS always uses TLS. The token is never included in configuration summaries, logs or metric labels.
+All three gRPC legs use plaintext by default. Listener TLS is enabled by the certificate/key pair, OAP TLS by `OAP_TLS=true`, and ARMS TLS by `ARMS_TLS=true`. Leave `ARMS_TLS=false` for plaintext ARMS ports such as `8000` or `8090`; use `true` only with a TLS endpoint such as port `443`. The token is never included in configuration summaries, logs or metric labels.
 
 Alibaba Cloud ARMS SkyWalking access guide: [Report Java application data with SkyWalking agent](https://www.alibabacloud.com/help/en/arms/tracing-analysis/use-skywalking-to-report-java-application-data).
 

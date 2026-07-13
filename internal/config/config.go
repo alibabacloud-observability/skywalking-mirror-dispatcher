@@ -32,6 +32,7 @@ type Config struct {
 	OAPCAFile           string
 	ARMSEndpoint        string
 	ARMSAuthentication  string
+	ARMSTLS             bool
 	ListenerTLSCertFile string
 	ListenerTLSKeyFile  string
 	MaxMessageBytes     int
@@ -61,6 +62,9 @@ func load(getenv func(string) string) (Config, error) {
 
 	var err error
 	if cfg.OAPTLS, err = parseBool(getenv, "OAP_TLS", false); err != nil {
+		return Config{}, err
+	}
+	if cfg.ARMSTLS, err = parseBool(getenv, "ARMS_TLS", false); err != nil {
 		return Config{}, err
 	}
 	if cfg.MaxMessageBytes, err = parsePositiveInt(getenv, "GRPC_MAX_MESSAGE_BYTES", defaultMaxMessageBytes); err != nil {
@@ -142,6 +146,7 @@ func (c Config) Summary() map[string]any {
 		"oap_custom_ca":           c.OAPCAFile != "",
 		"arms_endpoint":           c.ARMSEndpoint,
 		"arms_authentication_set": c.ARMSAuthentication != "",
+		"arms_tls":                c.ARMSTLS,
 		"listener_tls":            c.ListenerTLSCertFile != "",
 		"max_message_bytes":       c.MaxMessageBytes,
 		"max_inflight_rpcs":       c.MaxInflightRPCs,

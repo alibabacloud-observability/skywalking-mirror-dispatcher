@@ -73,7 +73,7 @@
 
 ### ARMS旁路
 
-- ARMS连接强制TLS，并且只注入 `Authentication=<ARMS_AUTHENTICATION>`。
+- ARMS连接默认plaintext；只有 `ARMS_TLS=true`时使用系统CA启用TLS。无论transport模式如何，都只注入 `Authentication=<ARMS_AUTHENTICATION>`。
 - 不得把入站 authentication、authorization、cookie或其他application metadata复制给ARMS。
 - 使用进程级non-blocking semaphore限制ARMS RPC并发；无容量时记录 `skipped`。
 - 每个准入的client stream使用独立有界typed queue；queue满时取消该副本并记录 `dropped`，OAP继续。
@@ -82,8 +82,8 @@
 
 ## 传输、安全与配置
 
-- Agent listener支持plaintext或普通server TLS；服务默认只能部署在客户可信网络，Kubernetes Service保持 `ClusterIP`。
-- OAP支持plaintext或TLS及可选CA；ARMS始终TLS。
+- Agent listener、OAP和ARMS三段gRPC链路都默认plaintext；服务默认只能部署在客户可信网络，Kubernetes Service保持 `ClusterIP`。
+- listener通过证书/私钥启用TLS，OAP通过 `OAP_TLS=true`启用TLS及可选CA，ARMS通过 `ARMS_TLS=true`启用使用系统CA的TLS。
 - 核心环境变量是 `OAP_ENDPOINT`、`ARMS_ENDPOINT`和 `ARMS_AUTHENTICATION`。
 - endpoint放入ConfigMap，只有 `ARMS_AUTHENTICATION`通过Secret引用注入。
 - 日志、错误、指标、测试输出和manifest不得包含token、authorization、cookie、私钥或其他凭证明文。

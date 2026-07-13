@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func TestOAPMayUsePlaintextButARMSRequiresTLS(t *testing.T) {
+func TestOAPAndARMSDefaultToPlaintext(t *testing.T) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
@@ -43,9 +43,38 @@ func TestOAPMayUsePlaintextButARMSRequiresTLS(t *testing.T) {
 	if _, err := healthv1.NewHealthClient(connections.OAP).Check(ctx, &healthv1.HealthCheckRequest{}); err != nil {
 		t.Fatalf("plaintext OAP health check failed: %v", err)
 	}
+	if _, err := healthv1.NewHealthClient(connections.ARMS).Check(ctx, &healthv1.HealthCheckRequest{}); err != nil {
+		t.Fatalf("plaintext ARMS health check failed: %v", err)
+	}
+}
+
+func TestARMSTLSRejectsPlaintextServer(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := grpc.NewServer()
+	healthv1.RegisterHealthServer(server, health.NewServer())
+	go func() { _ = server.Serve(listener) }()
+	t.Cleanup(server.Stop)
+
+	cfg := config.Config{
+		OAPEndpoint:        listener.Addr().String(),
+		ARMSEndpoint:       listener.Addr().String(),
+		ARMSAuthentication: "token",
+		ARMSTLS:            true,
+		MaxMessageBytes:    4 << 20,
+	}
+	connections, err := Dial(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = connections.Close() })
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
 	_, err = healthv1.NewHealthClient(connections.ARMS).Check(ctx, &healthv1.HealthCheckRequest{})
 	if err == nil || status.Code(err) != codes.Unavailable {
-		t.Fatalf("plaintext ARMS error = %v, want Unavailable TLS handshake failure", err)
+		t.Fatalf("ARMS TLS against plaintext server error = %v, want Unavailable", err)
 	}
 }
 

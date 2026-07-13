@@ -125,11 +125,11 @@ semaphore 满时副本记为 `skipped`；ARMS RPC 报错记为 `failed`；副本
 
 | 链路 | Transport 与 metadata 行为 |
 |---|---|
-| Agent → mirror | 支持 plaintext 或 server TLS。mirror 不鉴权，因此 listener 必须位于可信网络。 |
-| mirror → OAP | 支持 plaintext 或 TLS及可选自定义 CA。直接复制非保留入站 application metadata，包括 Agent 的 `Authentication`；没有独立 OAP token 配置。 |
-| mirror → ARMS | 强制 TLS。唯一的出站 application metadata 是 `Authentication=<ARMS_AUTHENTICATION>`；不复制入站 authentication、authorization、cookie 或其他 metadata。 |
+| Agent → mirror | 默认plaintext；配置证书和私钥后启用server TLS。mirror 不鉴权，因此 listener 必须位于可信网络。 |
+| mirror → OAP | 默认plaintext；`OAP_TLS=true`启用TLS及可选自定义CA。直接复制非保留入站 application metadata，包括 Agent 的 `Authentication`；没有独立 OAP token 配置。 |
+| mirror → ARMS | 默认plaintext；`ARMS_TLS=true`启用使用系统CA的TLS。唯一的出站 application metadata 是 `Authentication=<ARMS_AUTHENTICATION>`；不复制入站 authentication、authorization、cookie 或其他 metadata。 |
 
-ARMS token 是启动必填项，但配置摘要只记录它是否已设置。token 和私钥不会写入日志，也不会成为指标标签。Kubernetes 通过 ConfigMap 注入 endpoint，通过 Secret 引用注入 ARMS token。
+endpoint端口必须与transport模式匹配：ARMS的 `8000`、`8090`等端口保持明文，`443`等TLS endpoint需要设置 `ARMS_TLS=true`。ARMS token 是启动必填项，但配置摘要只记录它是否已设置。token 和私钥不会写入日志，也不会成为指标标签。Kubernetes 通过 ConfigMap 注入endpoint和TLS开关，通过Secret引用注入ARMS token。
 
 ## 9. 资源上限与生命周期
 
