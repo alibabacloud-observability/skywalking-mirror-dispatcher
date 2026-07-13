@@ -113,12 +113,34 @@ docker compose --profile mirror --profile demo up -d --build
 
 ## Validate the full chain
 
-Generate traffic (each `/hello` produces a multi-span trace: `/hello` server
-span -> RestTemplate client span -> `/work` server span):
+### Generate test traffic
+
+Each `/hello` produces a multi-span trace: `/hello` server span -> RestTemplate
+client span -> `/work` server span.
 
 ```bash
-for i in $(seq 1 80); do curl -s -o /dev/null http://<host>:18090/hello; done
+# quick burst
+for i in $(seq 1 150); do curl -s -o /dev/null http://<host>:18090/hello; done
 ```
+
+The `demo` container must be up first (`curl http://<host>:18090/hello` returns
+`200`); a freshly recreated app needs a few seconds to boot before the agent
+connects.
+
+For a stable service/topology in the UI, keep a light, sustained stream running
+for a minute or two rather than a single burst:
+
+```bash
+# sustained traffic for ~120s (~10 req/s)
+end=$((SECONDS+120))
+while [ $SECONDS -lt $end ]; do curl -s -o /dev/null http://<host>:18090/hello; sleep 0.1; done
+```
+
+> **Aggregation delay.** OAP needs ~30s to register a service and roll up the
+> first metrics window, so a new service will not appear immediately. If you
+> renamed the service (`SW_AGENT_NAME`) and recreated the `demo`, the old name
+> lingers in query results until its time window expires — both names coexisting
+> for a while is expected.
 
 1. **UI**: `http://<host>:13800` -> the `skywalking-mirror-demo` service appears under Services,
    with a topology node and traces (`GET:/hello`, `GET:/work`).
@@ -199,3 +221,9 @@ blocked (e.g. in China), override without editing tracked files.
 docker compose --profile mirror --profile demo down
 # add -v to also remove the BanyanDB volume/state
 ```
+
+## See also
+
+- [deploy-skywalking-demo-validation.md](deploy-skywalking-demo-validation.md) —
+  end-to-end validation procedure and conclusions (nonroot mirror, OAP leg, ARMS
+  plaintext leg).

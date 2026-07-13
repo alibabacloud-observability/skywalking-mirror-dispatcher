@@ -90,7 +90,6 @@ services:
     environment:
       SW_AGENT_NAME: "skywalking-mirror-demo"
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: "mirror:11800"
-      SW_AGENT_INSTANCE_NAME: "demo-1"
     ports:
       - "18090:8080"               # http://<host>:18090/hello
     networks: [sw]
