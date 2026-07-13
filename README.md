@@ -1,5 +1,7 @@
 # SkyWalking Mirror Dispatcher
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 `skywalking-mirror` is a small SkyWalking v3 gRPC relay. A customer OAP is the authoritative backend; Alibaba Cloud ARMS receives a bounded, best-effort copy.
 
 ```text
@@ -150,6 +152,8 @@ go vet ./...
 ```
 
 The tests use official generated clients and typed fake servers for representative unary, client-streaming and OAP-only calls. They also cover OAP metadata/status authority, cancellation, saturation, ARMS blocking/failure, queue overflow and bounded worker exit. See `docs/validation.md` for external smoke status.
+
+Architecture and design details: [English](docs/technical-design.md) | [简体中文](docs/technical-design.zh-CN.md).
 
 ## Repository and submodule workflow
 
