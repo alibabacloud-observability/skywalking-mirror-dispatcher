@@ -82,6 +82,8 @@ All settings are environment variables. No configuration file is loaded.
 
 ARMS always uses TLS. The token is never included in configuration summaries, logs or metric labels.
 
+Alibaba Cloud ARMS SkyWalking access guide: [Report Java application data with SkyWalking agent](https://www.alibabacloud.com/help/en/arms/tracing-analysis/use-skywalking-to-report-java-application-data).
+
 ## Run locally
 
 ```bash
@@ -151,7 +153,7 @@ go test -race ./...
 go vet ./...
 ```
 
-The tests use official generated clients and typed fake servers for representative unary, client-streaming and OAP-only calls. They also cover OAP metadata/status authority, cancellation, saturation, ARMS blocking/failure, queue overflow and bounded worker exit. See `docs/validation.md` for external smoke status.
+The tests use official generated clients and typed fake servers for representative unary, client-streaming and OAP-only calls. They also cover OAP metadata/status authority, cancellation, saturation, ARMS blocking/failure, queue overflow and bounded worker exit.
 
 Architecture and design details: [English](docs/technical-design.md) | [简体中文](docs/technical-design.zh-CN.md).
 
