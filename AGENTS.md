@@ -109,6 +109,7 @@ internal/telemetry/     Prometheus指标
 internal/upstream/      OAP/ARMS连接与TLS
 deploy/                 Kubernetes清单
 docs/                   中英文技术方案
+Makefile                本地构建、测试、镜像和清单校验入口
 ```
 
 共享转发语义放在typed helper中，每个generated service adapter只做类型绑定。不要为每个方法复制一套转发状态机。
@@ -118,11 +119,10 @@ docs/                   中英文技术方案
 提交前至少运行：
 
 ```bash
-gofmt -w ./cmd ./internal
-go test ./...
-go test -race ./...
-go vet ./...
+make check
 ```
+
+`make check`必须保持为格式检查、固定goapi版本检查、单元/集成测试、race detector和 `go vet`的统一门禁。不要让README、CI和人工命令各自维护不同的检查集合。
 
 协议或路由改动还必须确认：
 
@@ -130,7 +130,8 @@ go vet ./...
 - descriptor测试仍精确覆盖16个service、29个RPC和20/9分组；
 - representative unary、client-streaming、OAP-only transport测试通过；
 - ARMS阻塞、queue满、semaphore满、`UNIMPLEMENTED`、鉴权失败和不可达不改变OAP结果；
-- Docker镜像仍为非root，Kubernetes清单仍不通过Service暴露Admin端口。
+- `make docker-build`生成的镜像仍为非root；
+- `make kube-validate`通过，Kubernetes清单仍不通过Service暴露Admin端口。
 
 不要新增逐方法重复E2E、固定P99/吞吐门禁或没有真实生产依据的复杂watchdog。
 

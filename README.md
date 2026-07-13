@@ -146,11 +146,22 @@ Method labels come only from the fixed 29-method registry. User values, endpoint
 
 ## Development and verification
 
+The Makefile is the canonical local entry point:
+
 ```bash
-gofmt -w ./cmd ./internal
-go test ./...
-go test -race ./...
-go vet ./...
+make help
+make check
+make build
+```
+
+`make check` runs formatting verification, the pinned goapi check, unit/integration tests, the race detector and `go vet`. `make build` writes `bin/skywalking-mirror`.
+
+Additional targets:
+
+```bash
+make run                                      # uses the current environment
+make docker-build IMAGE=skywalking-mirror:dev
+make kube-validate
 ```
 
 The tests use official generated clients and typed fake servers for representative unary, client-streaming and OAP-only calls. They also cover OAP metadata/status authority, cancellation, saturation, ARMS blocking/failure, queue overflow and bounded worker exit.

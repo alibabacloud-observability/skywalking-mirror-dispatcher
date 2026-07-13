@@ -146,11 +146,22 @@ method 标签只来自固定的 29 个方法。用户输入、endpoint 和 token
 
 ## 开发与验证
 
+Makefile是本地开发的统一入口：
+
 ```bash
-gofmt -w ./cmd ./internal
-go test ./...
-go test -race ./...
-go vet ./...
+make help
+make check
+make build
+```
+
+`make check`依次执行格式检查、固定goapi版本检查、单元/集成测试、race detector和 `go vet`。`make build`将二进制写入 `bin/skywalking-mirror`。
+
+其他目标：
+
+```bash
+make run                                      # 使用当前环境变量
+make docker-build IMAGE=skywalking-mirror:dev
+make kube-validate
 ```
 
 测试使用官方 generated client 和 typed fake server，覆盖代表性的 unary、client-streaming 和 OAP-only 调用，还覆盖 OAP metadata/status 权威语义、取消、过载、ARMS 阻塞/失败、队列溢出和 worker 有界退出。
